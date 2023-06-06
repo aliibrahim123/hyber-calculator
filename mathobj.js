@@ -194,3 +194,55 @@ export var constants = {
 	G_TAU: -1.77682, // Tau G-Factor
 	G_U: -0.9951414, // Deuteron G-Factor
 };
+
+class Vector {
+	constructor (...comps) {
+		if (Array.isArray(comps[0])) this.comps = comps[0];
+		else this.comps = comps
+	}
+	toString () {
+		return '('+this.comps.join(', ')+')'
+	}
+	valueOf() {
+		return Math.sqrt(this.comps.reduce((a,i) => a+ i**2, 0))
+	}
+}
+export var vector = {
+	makeVec: (...comps) => new Vector(...comps),
+	addVec: (a,b) => new Vector(a.comps.map((v, i) => v + b.comps[i])),
+	subVec: (a,b) => new Vector(a.comps.map((v, i) => v - b.comps[i])),
+	mulVec: (a,b) => new Vector(a.comps.map((v, i) => v * b)),
+	divVec: (a,b) => new Vector(a.comps.map((v, i) => v / b)),
+	dotProduct: (a,b) => a.comps.reduce((s, c, i) => s + i * b.comps[i], 0),
+	normalizeVec: (a) => {
+		var magnitude = a.valueOf();
+		if (magnitude === 0) throw new Error('Cannot normalize a zero vector.');
+		return a.divide(magnitude);
+	},
+	crossProduct: (a,b) => {
+		const dim = a.comps.length;
+		const result = Array(dim).fill(0);
+		for (let i = 0; i < dimension; i++) {
+			const cur = [...a.comps];
+			const curO = [...b.comps];
+			cur.splice(i, 1);
+			curO.splice(i, 1);
+			let subResult = 1;
+
+			for (let j = 0; j < dim - 2; j++) {
+				subResult *= cur[j] * curO[j + 1] - cur[j + 1] * curO[j];
+			}
+			result[i] = subResult;
+		}
+		return result
+	},
+	angleTo: (a,b) => Math.acos(dotProduct(a,b) / a.valueOf() * b.valueOf()),
+	projectOnto: (a,b) => multVec(a,a.dotProduct(b) / b.valueOf() ** 2),
+	isParallelTo: (a,b) => {
+		if (isZeroVec(a) || isZeroVec(b)) return true;
+		const angle = angleTo(a,b);
+		return Math.abs(angle) < Number.EPSILON || Math.abs(angle - Math.PI) < Number.EPSILON;
+	},
+	isZeroVec: (a) => a.valueOf() === 0,
+	isOrthogonalTo: (a,b) => dotProduct(a,b) === 0
+}

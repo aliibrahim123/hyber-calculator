@@ -6,6 +6,7 @@
     background: #353535;
     border-style: solid;
     margin: 10%;
+	text-align: center;
 }
 
 #inp {
@@ -19,6 +20,12 @@
 	border: solid black;
     border-radius: 12px;
 	font-size: 15px;
+	max-height: 250px;
+    min-height: 30px;
+}
+
+button {
+	font-size: calc(100% - 3.5px)
 }
 
 #error {
@@ -27,8 +34,57 @@
     border: red 4px solid;
     padding: 3px;
 }
-#calc {
-	text-align: center;
+
+.memU {
+	display: inline-block;
+    border: black 1.5px solid;
+    margin: 2px;
+    background: linear-gradient(236deg, black, #4b4b4b);
+    color: darkgray;
+    padding: 1px 3px;
+}
+
+#mem {
+	background: linear-gradient(135deg, black, #444444);
+    border: 3px black solid;
+}
+
+
+#gropt {
+	background: linear-gradient(129deg, #222222, #888888);
+    border: 3px black solid;
+	grid-template-columns: repeat( auto-fill, minmax(200px, 1fr) );
+}
+
+#his {
+	background: linear-gradient(135deg, #222222, #666666);
+    border: 3px black solid;
+}
+
+.hisU {
+	display: inline-block;
+    border: black 1.5px solid;
+    margin: 2px;
+    background: linear-gradient(236deg, #33333300, #777777);
+    padding: 1px 3px;
+}
+
+#var {
+	background: linear-gradient(308deg, #555555, #999999);
+    border: 3px black solid;
+}
+
+#canva {
+    border: 2px solid black;
+    background: darkcyan;
+}
+
+.varU {
+	display: inline-block;
+    border: black 1.5px solid;
+    margin: 2px;
+    background: linear-gradient(285deg, #333333, #aaaaaa);
+    padding: 1px 3px;
 }
 
 #btnTCont {
