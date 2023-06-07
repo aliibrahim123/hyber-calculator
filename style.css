@@ -51,9 +51,47 @@ button {
 
 
 #gropt {
-	background: linear-gradient(129deg, #222222, #888888);
+	background: linear-gradient(254deg, #000000, #AAAAAA);
     border: 3px black solid;
 	grid-template-columns: repeat( auto-fill, minmax(200px, 1fr) );
+}
+
+#tbopt {
+	background: linear-gradient(129deg, #222222, #888888);
+    border: 3px black solid;
+	grid-template-columns: repeat( auto-fill, minmax(90px, 1fr) );
+}
+
+.tbob {
+	background: linear-gradient(45deg, #555555, #AAAAAA);
+    color: black;
+}
+
+#table {
+	border: 3px black solid;
+    background: linear-gradient(45deg, #444444, #111111);
+	border-collapse: collapse;
+	table-layout: fixed;
+	display: flex;
+    justify-content: space-between;
+}
+
+tr {
+	border-bottom: 1px solid black;
+	display: flex;
+}
+
+td:hover, td:focus {
+    color: lime;
+    background: #00000033;
+    height: auto;
+}
+td {
+    border-right: 1px solid black;
+    flex-grow: 1;
+    width: 1px;
+    height: 1em;
+    overflow: hidden;
 }
 
 #his {

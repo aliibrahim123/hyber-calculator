@@ -1,4 +1,5 @@
 import { graph } from './graph.js';
+import { table } from './table.js';
 
 export class Calculator {
 	constructor (el, buttons) {
@@ -67,16 +68,27 @@ export class Calculator {
 		this.hisel = $el('<div id="his" style="display:none">')[0];
 		this.varel = $el('<div id="var" style="display:none">')[0];
 		
-		this.graph = new graph($el('<canvas id="canva" style = "display: none">')[0], this.el.clientWidth - 80, this.el.clientWidth -80, 0,0,20)
+		this.graph = new graph($el('<canvas id="canva" style = "display: none">')[0], this.el.clientWidth - 80, this.el.clientWidth -80, 0,0,20);
+		this.table = new table($el('<table id="table" style="display: none">')[0], [[1,2], [3,4]]);
 		
 		this.graphOpts = $el(`<div id='gropt'style='display:none'>
 		<span>offsetX:<input id='ox'type="number"></span> <span>offsetY:<input id='oy'type="number"></span> 
 		<span>scale:<input id='scale'type="number" value=20></span> <span>error:<input value=0.05 min=0.00001; max=0.5 step=0.01 id='err'type="number"></span>
-		<span>thickness:<input min=1 max=10 id='thick'type="range"></span></stc>
+		<span>thickness:<input min=1 max=10 id='thick'type="range"></span><span><button id='' onclick = 'calc.constructor.basicBtns.graph(calc);calc.constructor.basicBtns.graph(calc)'>update</button>
 		`)[0];
 		$el('input', this.graphOpts).forEach(i=>i.oninput = this.handleGraphBtn.bind(this));
 		
-		el.append(this.inp, this.errel, this.outel, this.graph.canvas, this.graphOpts, this.btnBCont, this.btnBBCont, this.btnTCont, this.btnFCont, this.varel, this.memel, this.hisel);
+		this.tableOpts = $el(`<div id='tbopt'style='display:none'>
+		<button class='tbob' onclick='calc.table.new()'>new</button>
+		<button class='tbob' onclick='calc.table.load()'>load</button>
+		<button class='tbob' onclick='calc.table.save()'>save</button>
+		<button class='tbob' onclick='calc.table.addRow()'>add row</button>
+		<button class='tbob' onclick='calc.table.addCol()'>add column</button>
+		<button class='tbob' onclick='calc.table.remRow()'>remove row</button>
+		<button class='tbob' onclick='calc.table.remCol()'>remove column</button>
+		`)[0];
+		
+		el.append(this.inp, this.errel, this.outel, this.graph.canvas, this.graphOpts, this.table.el, this.tableOpts, this.btnBCont, this.btnBBCont, this.btnTCont, this.btnFCont, this.varel, this.memel, this.hisel);
 		this.switchGrp();
 		this.switchGrp();
 		this.handleBBBtn();
@@ -149,7 +161,7 @@ export class Calculator {
 		this.memory.unshift(latest);
 		this.memory.pop();
 		Object.assign(globalThis, Object.fromEntries(this.memory.map((i, ii)=> [ii ? 'm' + ii : 'm', i])));
-		this.memel.replaceChildren(...Array.from({length:64}).map((ii, i)=>i?'m'+i:'m').map(i=>$el('<span class="memU">' + i + ':' + globalThis[i])[0]));
+		this.memel.replaceChildren(...Array.from({length:64}).map((ii, i)=>i?'m'+i:'m').map(i=>$el('<span class="memU">' + i + ':' + String(globalThis[i]))[0]));
 	}
 	pushHis (latest) {
 		this.history.unshift(latest);
@@ -157,8 +169,9 @@ export class Calculator {
 		this.hisel.replaceChildren(...Array.from({length:64}).map((ii, i)=>[i?'h'+i:'h', i]).map(i=>$el('<span class="hisU">' + i[0] + ':' + this.history[i[1]])[0]));
 	}
 	handleVar () {
+		this.variables = Array.from(new Set(this.variables));
 		this.btnsData.variables = Object.fromEntries(this.variables.map(i=>[i,i]));
-		this.varel.replaceChildren(...this.variables.map(i=>$el('<span class="varU">' + i + ':' + globalThis[i])[0]));
+		this.varel.replaceChildren(...this.variables.map(i=>$el('<span class="varU">' + i + ':' + String(globalThis[i]))[0]));
 	}
 	handleBasic (e) {
 		e.preventDefault();
@@ -179,7 +192,7 @@ export class Calculator {
 	insert (text) {
 		insertText(text, this.inp)
 	}
-	static baseBtn = [1,2,3,4,5,6,7,8,9,0,'.','+','-','/','*','x','y','a','b','c','d','e','f','(',')','[',']',';'];
+	static baseBtn = [1,2,3,4,5,6,7,8,9,0,'.','+','-','/','*',',','ans','x','y','a','b','c','d','e','f','(',')','[',']',';'];
 	static basicBtns = {
 		space (calc) {
 			calc.insert(' ')
@@ -251,6 +264,11 @@ export class Calculator {
 			calc.graph.canvas.style.display = calc.graph.canvas.style.display === 'none' ? 'block' : 'none';
 			calc.graphOpts.style.display = calc.graphOpts.style.display === 'none' ? 'grid' : 'none'
 		},
+		table (calc) {
+			calc.table.redo([]);
+			calc.table.el.style.display = calc.table.el.style.display === 'none' ? 'block' : 'none';
+			calc.tableOpts.style.display = calc.tableOpts.style.display === 'none' ? 'grid' : 'none'
+		},
 		save (calc) {
 			localStorage.setItem('calc', JSON.stringify({
 				memory: calc.memory,
@@ -260,10 +278,16 @@ export class Calculator {
 				linp: calc.inp.value,
 				funs: calc.funs,
 				ans
+			}, (k,v) => {
+				if (typeof v === 'object' && v !== null && !Array.isArray(v) && v.constructor !== Object) return {...v, proto: v.constructor.name};
+				return v
 			}))
 		},
 		load (calc) {
-			var obj = JSON.parse(localStorage.getItem('calc'));
+			var obj = JSON.parse(localStorage.getItem('calc'), (k,v) => {
+				if (typeof v === 'object' && v !== null && !Array.isArray(v) && v.proto) return {...v, __proto__: globalThis[v.proto].prototype, proto: undefined};
+				return v
+			});
 			if (!obj) return;
 			calc.history = obj.history;
 			calc.memory = obj.memory;
@@ -283,7 +307,7 @@ export class Calculator {
 				obj1[i] = i + '('
 			}
 			calc.btnsData.functions = obj1;
-			calc.memel.replaceChildren(...Array.from({length:64}).map((ii, i)=>i?'m'+i:'m').map(i=>$el('<span class="memU">' + i + ':' + globalThis[i])[0]));
+			calc.memel.replaceChildren(...Array.from({length:64}).map((ii, i)=>i?'m'+i:'m').map(i=>$el('<span class="memU">' + i + ':' + String(globalThis[i]))[0]));
 		}
 	}
 }

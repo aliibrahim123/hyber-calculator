@@ -1,3 +1,117 @@
+export var base = {
+	add: (a,b) => a+b,
+	sub: (a,b) => a-b,
+	mult: (a,b) => a*b,
+	div: (a,b) => a/b,
+	neg: (a) => -a,
+	abs: Math.abs,
+	equal: (a,b) => a === b,
+	ne: (a,b) => a !== b,
+	gt: (a,b) => a > b,
+	lt: (a,b) => a < b,
+	gte: (a,b) => a >= b,
+	lte: (a,b) => a <= b,
+	sign: Math.sign,
+	nb: a => Number(a),
+	int: Math.floor,
+	isNb: (a) => a?.constructor === Number,
+	isNaN: isNaN,
+	isInt: Number.isInteger,
+	isFloat: a => !isInt(a),
+	rand: (min=0, max=1) => Math.random * (max - min) + min,
+	randInt: (min=1, max=10) => Math.round(Math.random * (max - min) + min),
+}
+
+export var bit = {
+	and: (a,b) => a & b,
+	not: (a) => ~a,
+	or: (a,b) => a | b,
+	xor: (a,b) => a ^ b,
+	nand: (a,b) => ~(a & b),
+	nor: (a,b) => ~(a | b),
+	xnor: (a,b) => ~(a ^ b),
+	truthness: a => !!a,
+	lShift: (a,b) => a << b,
+	rShift: (a,b) => a >> b,
+	uRShift: (a,b) => a >>> b,
+	rotateLeft: (num, shift) => (num << shift) | (num >>> (32 - shift)),
+	rotateRight: (num, shift) => (num >>> shift) | (num << (32 - shift)),
+	uint8: a => Math.max(Math.min(a,255),0),
+	uint16: a => Math.max(Math.min(a,65535),0),
+	uint32: a => Math.max(Math.min(a,4294967295),0),
+	int8: a => Math.max(Math.min(a,127),-128),
+	int16: a => Math.max(Math.min(a,32767),-32768),
+	int32: a => Math.max(Math.min(a,2147483647),-2147483648),
+	isUint8: a => a >= 0 && a <= 255,
+	isUint16: a => a >= 0 && a <= 65535,
+	isUint32: a => a >= 0 && a <= 4294967295,
+	isInt8: a => a >= -128 && a <= 127,
+	isInt16: a => a >= -32768 && a <= 32767,
+	isInt32: a => a >= -2147483648 && a <= 2147483647,
+	getBit: (num, bitPosition) => (num >> bitPosition) & 1,
+	setBit: (num, bitPosition) => num | (1 << bitPosition),
+	clearBit: (num, bitPosition) => num & ~(1 << bitPosition),
+	toggleBit: (num, bitPosition) => num ^ (1 << bitPosition),
+	extract: (num, startBit, bitLength) => (num >> startBit) & (1 << bitLength) - 1,
+	insert: (num, bitfield, startBit, bitLength) => {
+		const mask = (1 << bitLength) - 1;
+		bitfield &= mask;
+		return (num & ~(mask << startBit)) | (bitfield << startBit);
+	},
+	isEven: (num) => (num & 1) === 0,
+	isOdd: (num) => (num & 1) === 1,
+	isPowerOfTwo: (num) => num > 0 && (num & (num - 1)) === 0,
+	countSetBits: (num) => {
+		let count = 0;
+		while (num) {
+			num &= num - 1;
+			count++;
+		}
+		return count;
+	},
+	reverseBits: (num) => {
+		let result = 0;
+		let bitCount = Math.floor(Math.log2(num)) + 1;
+
+		while (bitCount--) {
+			result <<= 1;
+			result |= num & 1;
+			num >>= 1;
+		}
+
+		return result;
+	},
+	nextPowerOfTwo: (num) => {
+		num--;
+		num |= num >> 1;
+		num |= num >> 2;
+		num |= num >> 4;
+		num |= num >> 8;
+		num |= num >> 16;
+		num++;
+		return num;
+	},
+	reverseBits: (num) => {
+		let result = 0;
+		for (let i = 0; i < 32; i++) {
+			result <<= 1;
+			result |= num & 1;
+			num >>= 1;
+		}
+		return result >>> 0;
+	},
+	countLeadingZeros: (num) => {
+		if (num === 0) return 32;
+		let count = 0;
+		num = ~num;
+		while (num < 0) {
+			num <<= 1;
+			count++;
+		}
+		return count;
+	},
+}
+
 export var trig = {
 	sin: (angle) => Math.sin(angle),
 	cos: (angle) => Math.cos(angle),
@@ -108,6 +222,15 @@ export var expalog = {
 export var constants = {
 	PI: Math.PI,
 	E: Math.E,
+	MAX_UINT8: 255,
+	MAX_UINT16: 65535,
+	MAX_UINT32: 4294967295,
+	MAX_INT8: 127,
+	MIN_INT8: -128,
+	MAX_INT16: 32768,
+	MIN_INT16: -32767,
+	MAX_INT32: 2147483647,
+	MIN_INT32: -2147483648,
 	LN10: Math.LN10,
 	LN2: Math.LN2,
 	LOG10E: Math.LOG10E,
@@ -195,7 +318,73 @@ export var constants = {
 	G_U: -0.9951414, // Deuteron G-Factor
 };
 
-class Vector {
+export var array = {
+	makeArray: (l, f) => Array.from({length:l}, i=>f),
+	range: (s,e,t=1) => {
+		var arr = [];
+		for (let i = s; i < e; i+=t) {
+			arr.push(i)
+		}
+		return arr
+	},
+	vecToArr: (vec) => vec.comps,
+	tableToArr: (t) => t.data,
+	setToArr: (s) => Array.from(s),
+	len: (a) => a.length,
+	at: (arr, i) => arr[i],
+	concat: (arr, ...i) => arr.concat(...i),
+	copyWithin: (arr, a,b,c) => arr.copyWithin(a,b,c),
+	fill: (arr, a,b,c) => arr.fill(a,b,c),
+	find: (arr, a) => arr.find(a),
+	findIndex: (arr, a) => arr.findIndex(a),
+	findLast: (arr, a) => arr.findLast(a),
+	findLastIndex: (arr, a) => arr.findLastIndex(a),
+	indexOf: (arr, a) => arr.indexOf(a),
+	lastIndexOf: (arr, a) => arr.lastIndexOf(a),
+	pop: (arr) => arr.pop(),
+	push: (arr, ...items) => arr.push(...items),
+	reverse: (arr) => arr.reverse(),
+	shift: (arr) => arr.shift(),
+	unshift: (arr, ...items) => arr.unshift(...items),
+	slice: (arr, s,e) => arr.slice(s,e),
+	splice: (arr, ...items) => arr.splice(...items),
+	includes: (arr, a) => arr.includes(a),
+	join: (arr, a) => arr.join(a),
+	filter: (arr, fn) => arr.filter(fn),
+	flat: (arr) => arr.flat(),
+	flatMap: (arr, fn) => arr.flatMap(fn),
+	map: (arr, fn) => arr.map(fn),
+	every: (arr, fn) => arr.every(fn),
+	some: (arr, fn) => arr.some(fn),
+	reduce: (arr, fn, i) => arr.reduce(fn, i),
+	reduceRight: (arr, fn, i) => arr.reduceRight(fn, i),
+}
+
+export var struct = {
+	makeStruct: (...items) => Object.fromEntries(items.map(i=>[i,0])),
+	has: (s, p) => s[p] !== undefined,
+	get: (s, p) => s[p],
+	set: (s,p,v) => s[p] = v,
+	loopStruct: (s, f) => {
+		for (let p in s) {f(p[s], s, p)}
+	},
+	mapStruct: (s, f) => {
+		var r = {};
+		for (let p in s) {r[p] = f(p[s], s, p)}
+		return r
+	},
+	filterStruct: (s,f) => {
+		var r = {};
+		for (let p in s) {if (f(p[s], s, p)) r[p] = s[p]}
+		return r
+	},
+	reduceStruct: (s,f, r) => {
+		for (let p in s) {r = f(r, p[s], s, p)}
+		return r
+	}
+}
+
+globalThis.Vector = class Vector {
 	constructor (...comps) {
 		if (Array.isArray(comps[0])) this.comps = comps[0];
 		else this.comps = comps
@@ -203,12 +392,17 @@ class Vector {
 	toString () {
 		return '('+this.comps.join(', ')+')'
 	}
-	valueOf() {
+	valueOf() {//magnitude
 		return Math.sqrt(this.comps.reduce((a,i) => a+ i**2, 0))
 	}
 }
 export var vector = {
 	makeVec: (...comps) => new Vector(...comps),
+	zeroVec: (l) => new Vector(Array.from({length:l}).map(i=>0)),
+	oneVec: (l) => new Vector(Array.from({length:l}).map(i=>1)),
+	arrToVec: (arr) => new Vector(arr),
+	copy: (vec) => new Vector(vec.comps.map(i=>i)),
+	compOfVec: (vec, i) => vec.comps[i],
 	addVec: (a,b) => new Vector(a.comps.map((v, i) => v + b.comps[i])),
 	subVec: (a,b) => new Vector(a.comps.map((v, i) => v - b.comps[i])),
 	mulVec: (a,b) => new Vector(a.comps.map((v, i) => v * b)),
@@ -219,7 +413,7 @@ export var vector = {
 		if (magnitude === 0) throw new Error('Cannot normalize a zero vector.');
 		return a.divide(magnitude);
 	},
-	crossProduct: (a,b) => {
+	crossProductVec: (a,b) => {
 		const dim = a.comps.length;
 		const result = Array(dim).fill(0);
 		for (let i = 0; i < dimension; i++) {
@@ -236,13 +430,406 @@ export var vector = {
 		}
 		return result
 	},
-	angleTo: (a,b) => Math.acos(dotProduct(a,b) / a.valueOf() * b.valueOf()),
-	projectOnto: (a,b) => multVec(a,a.dotProduct(b) / b.valueOf() ** 2),
 	isParallelTo: (a,b) => {
 		if (isZeroVec(a) || isZeroVec(b)) return true;
 		const angle = angleTo(a,b);
 		return Math.abs(angle) < Number.EPSILON || Math.abs(angle - Math.PI) < Number.EPSILON;
 	},
 	isZeroVec: (a) => a.valueOf() === 0,
-	isOrthogonalTo: (a,b) => dotProduct(a,b) === 0
+	isOrthogonalTo: (a,b) => dotProduct(a,b) === 0,
+	magnitude: (vec) => vec.valueOf,
+	distanceVec: (a, b) => vector.magnitude(vector.subVec(a, b)),
+	unitVec: (vec) => divVec(vec, magnitude(vec)),
+	angleBetween: (a, b) => Math.acos(dotProduct(a, b) / (magnitude(a) * magnitude(b))),
+	projection: (a, b) => mulVec(unitVector(b), dotProduct(a, unitVector(b))),
+	isUnitVec: (vec) => Math.abs(magnitude(vec) - 1) < Number.EPSILON,
+	isPerpendicularToVec: (a, b) => dotProduct(a, b) === 0,
+	reflect: (v, n) => subVec(v, mulVec(mulVec(n, 2), dotProduct(v, n))),
+	projectOntoPlane: (v, n) => subVec(v, projection(v, n)),
+	randomVec: (min, max, dim) => new Vector(Array.from({length: dim}, ()=>Math.random()*(max - min) + min)),
+	sumVec: (...vecs) => vecs.reduce((acc, cur) => addVec(acc, cur), zeroVec(vecs[0].length)),
+	isEqualVec: (a, b) => a.comps.length === b.comps.length && a.comps.every((v, i) => v === b.comps[i]),
+	elWiseMultVec: (a, b) => new Vector(a.comps.map((v, i) => v * b.comps[i])),
+	elWiseDivVec: (a, b) => new Vector(a.comps.map((v, i) => v / b.comps[i])),
+	elWiseMinVec: (a, b) => new Vector(a.comps.map((v, i) => Math.min(v, b.comps[i]))),
+	elWiseMaxVec: (a, b) => new Vector(a.comps.map((v, i) => Math.max(v, b.comps[i]))),
+	absVec: (a) => new Vector(a.comps.map(Math.abs)),
+	sumCompsVec: (vec) => vec.comps.reduce((acc, cur) => acc + cur, 0),
+	productCompsVec: (vec) => vec.comps.reduce((acc, cur) => acc * cur, 1),
+	roundVec: (a) => new Vector(a.comps.map(Math.round)),
+	ceilVec: (a) => new Vector(a.comps.map(Math.ceil)),
+	truncVec: (a) => new Vector(a.comps.map(Math.trunc)),
+	signVec: (a) => new Vector(a.comps.map(Math.sign)),
+	average: (...vecs) => divVec(sumVec(...vecs), vecs.length),
+	mapVec: (a,f) => new Vector(a.comps.map(f)),
+}
+
+export var set = {
+	arrToSet: (arr) => new Set(arr),
+	union: (a, b) => new Set([...a, ...b]),
+	intersection: (a, b) => new Set([...a].filter((x) => b.has(x))),
+	difference: (a, b) => new Set([...a].filter((x) => !b.has(x))),
+	subset: (a, b) => [...a].every((x) => b.has(x)),
+	superset: (a, b) => [...b].every((x) => a.has(x)),
+	symmetricDifference: (a, b) => new Set([...a].filter((x) => !b.has(x)).concat([...b].filter((x) => !a.has(x)))),
+	isDisjoint: (a, b) => [...a].every((x) => !b.has(x)),
+	isEmptySet: (set) => set.size === 0,
+	sizeSet: (set) => set.size,
+	isEqualSet: (a, b) => a.size === b.size && [...a].every((x) => b.has(x)),
+	isSubsetOf: (a, b) => subset(a, b),
+	isSupersetOf: (a, b) => superset(a, b),
+	isProperSubsetOf: (a, b) => subset(a, b) && !isEqualSet(a, b),
+	isProperSupersetOf: (a, b) => superset(a, b) && !isEqualSet(a, b),
+	complementSet: (a, b) => difference(b, a),
+	powerSet: (set) => {
+		const input = arrToSet(set);
+		const result = [[]];
+		for (let i = 0; i < input.length; i++) {
+			const currentSubsets = result.map((subset) => [...subset, input[i]]);
+			result.push(...currentSubsets);
+		}
+		return arrToSet(result);
+	},
+	cartesianProduct: (a, b) => {
+		const result = new Set();
+		for (const x of a) {
+			for (const y of b) {
+				result.add([x, y]);
+			}
+		}
+		return result;
+	},
+	isPartition: (sets, universalSet) => {
+		const flattenedSets = sets.reduce((arr, set) => arr.concat(Array.from(set)), []);
+		const mergedSet = new Set(flattenedSets);
+		return isEqualSet(mergedSet, universalSet);
+	},
+	isDisjointSetSystem: (sets) => {
+		const universalSet = new Set();
+		for (const set of sets) {
+			if (!isDisjoint(set, universalSet)) {
+				return false;
+			}
+			union(universalSet, set);
+		}
+		return true;
+	},
+	isSingleton: (set) => set.size === 1,
+	isEvenSubset: (a, b) => isEmptySet(difference(a, b)),
+	isProperEvenSubset: (a, b) => isEvenSubset(a, b) && !isEqualSet(a, b),
+	isOddSubset: (a, b) => isSubsetOf(a, b) && !isEvenSubset(a, b),
+	isProperOddSubset: (a, b) => isOddSubset(a, b) && !isEqualSet(a, b),
+}
+
+export var statistic = {
+	min: (data) => data.reduce(Math.min),
+	max: (data) => data.reduce(Math.max),
+	average: (data) => data.reduce(add, 0) / data.length,
+	mean: (data) => data.reduce((acc, val) => acc + val, 0) / data.length,
+	
+	median: (data) => {
+		const sortedData = [...data].sort((a, b) => a - b);
+		const mid = Math.floor(sortedData.length / 2);
+		return sortedData.length % 2 === 0
+			? (sortedData[mid - 1] + sortedData[mid]) / 2
+			: sortedData[mid];
+	},
+	
+	mode: (data) => {
+		const frequency = {};
+		data.forEach((value) => {
+			frequency[value] = (frequency[value] || 0) + 1;
+		});
+		let modes = [];
+		let maxCount = 0;
+		for (const key in frequency) {
+			if (frequency.hasOwnProperty(key)) {
+				const count = frequency[key];
+				if (count > maxCount) {
+					modes = [parseFloat(key)];
+					maxCount = count;
+				} else if (count === maxCount) {
+					modes.push(parseFloat(key));
+				}
+			}
+		}
+		return modes;
+	},
+	
+	variance: (data) => {
+		const mean = mean(data);
+		const squaredDifferences = data.map((value) => (value - mean) ** 2);
+		return mean(squaredDifferences);
+	},
+	
+	standardDeviation: (data) => Math.sqrt(variance(data)),
+	
+	range: (data) => {
+		const sortedData = [...data].sort((a, b) => a - b);
+		return sortedData[sortedData.length - 1] - sortedData[0];
+	},
+	
+	correlation: (data1, data2) => {
+		if (data1.length !== data2.length) {
+			throw new Error('Data sets must have the same length.');
+		}
+		const mean1 = mean(data1);
+		const mean2 = mean(data2);
+		const deviations1 = data1.map((value) => value - mean1);
+		const deviations2 = data2.map((value) => value - mean2);
+		const productDeviations = deviations1.map((dev1, i) => dev1 * deviations2[i]);
+		const covariance = mean(productDeviations);
+		const standardDeviation1 = standardDeviation(data1);
+		const standardDeviation2 = standardDeviation(data2);
+		return covariance / (standardDeviation1 * standardDeviation2);
+	},
+	factorial: (n) => {
+		if (n === 0 || n === 1) {
+			return 1;
+		} else {
+			return n * factorial(n - 1);
+		}
+	},
+
+	combination: (n, k) => {
+		if (k === 0 || k === n) {
+			return 1;
+		} else {
+			return (
+				factorial(n) /
+				(factorial(k) * factorial(n - k))
+			);
+		}
+	},
+
+	permutation: (n, k) => {
+		if (k === 0) {
+			return 1;
+		} else {
+			return factorial(n) / factorial(n - k);
+		}
+	},
+
+	binomialDistribution: (n, p, x) => {
+		const q = 1 - p;
+		const coefficient = combination(n, x);
+		const probability = coefficient * (p ** x) * (q ** (n - x));
+		return probability;
+	},
+
+	exponentialDistribution: (lambda, x) => {
+		if (x < 0) {
+			return 0;
+		} else {
+			return lambda * Math.exp(-lambda * x);
+		}
+	},
+
+	normalDistributionPDF: (mean, stdDev, x) => {
+		const coefficient = 1 / (stdDev * Math.sqrt(2 * Math.PI));
+		const exponent = -((x - mean) ** 2) / (2 * (stdDev ** 2));
+		return coefficient * Math.exp(exponent);
+	},
+
+	normalDistributionCDF: (mean, stdDev, x) => {
+		const z = (x - mean) / stdDev;
+		return 0.5 * (1 + errorFunction(z / Math.sqrt(2)));
+	},
+
+	errorFunction: (x) => {
+		const t = 1 / (1 + 0.5 * Math.abs(x));
+		const coefficient1 = 0.278393;
+		const coefficient2 = 0.230389;
+		const coefficient3 = 0.000972;
+		const coefficient4 = 0.078108;
+		const polynomial = ((coefficient4 * t + coefficient3) * t + coefficient2) * t + coefficient1;
+		const probability = 1 - (polynomial * Math.exp(-(x ** 2)));
+		return x >= 0 ? probability : -probability;
+	},
+	covariance: (data1, data2) => {
+		if (data1.length !== data2.length) {
+			throw new Error('Data sets must have the same length.');
+		}
+		const mean1 = mean(data1);
+		const mean2 = mean(data2);
+		const deviations1 = data1.map((value) => value - mean1);
+		const deviations2 = data2.map((value) => value - mean2);
+		const productDeviations = deviations1.map((dev1, i) => dev1 * deviations2[i]);
+		return mean(productDeviations);
+	},
+
+	linearRegression: (x, y) => {
+		if (x.length !== y.length) {
+			throw new Error('Input arrays must have the same length.');
+		}
+		const n = x.length;
+		const sumX = sum(x);
+		const sumY = sum(y);
+		const sumXY = sum(x.map((val, i) => val * y[i]));
+		const sumXSquare = sum(x.map((val) => val ** 2));
+		const slope = (n * sumXY - sumX * sumY) / (n * sumXSquare - sumX ** 2);
+		const intercept = (sumY - slope * sumX) / n;
+		return { slope, intercept };
+	},
+
+	chiSquareTest: (observed, expected) => {
+		if (observed.length !== expected.length) {
+			throw new Error('Input arrays must have the same length.');
+		}
+		const chiSquare = observed.reduce((acc, val, i) => {
+			const diff = val - expected[i];
+			return acc + (diff ** 2) / expected[i];
+		}, 0);
+		return chiSquare;
+	},
+
+	tDistributionPDF: (x, df) => {
+		const numerator = gamma((df + 1) / 2);
+		const denominator = Math.sqrt(df * Math.PI) * gamma(df / 2);
+		const coefficient = numerator / denominator;
+		const exponent = -((df + 1) / 2) * Math.log(1 + (x ** 2) / df);
+		return coefficient * Math.exp(exponent);
+	},
+
+	gamma: (n) => {
+		if (n === 0) {
+			return Infinity;
+		} else {
+			const coefficients = [
+				76.18009172947146, -86.50532032941677, 24.01409824083091,
+				-1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5
+			];
+			const x = n - 1;
+			let tmp = x + 5.5 - (x + 0.5) * Math.log(x + 5.5);
+			for (let i = 0; i < coefficients.length; i++) {
+				tmp += coefficients[i] / (x + (i + 1));
+			}
+			return Math.sqrt(2 * Math.PI) * Math.exp(-tmp) * Math.pow(x + 5.5, x + 0.5);
+		}
+	},
+
+	sum: (data) => data.reduce((acc, val) => acc + val, 0),
+	zScore: (value, mean, stdDev) => (value - mean) / stdDev,
+
+	pearsonCorrelation: (data1, data2) => {
+		if (data1.length !== data2.length) {
+			throw new Error('Data sets must have the same length.');
+		}
+		const mean1 = mean(data1);
+		const mean2 = mean(data2);
+		const deviations1 = data1.map((value) => value - mean1);
+		const deviations2 = data2.map((value) => value - mean2);
+		const productDeviations = deviations1.map((dev1, i) => dev1 * deviations2[i]);
+		const sumProductDeviations = sum(productDeviations);
+		const sumSquaredDeviations1 = sum(deviations1.map((dev) => dev ** 2));
+		const sumSquaredDeviations2 = sum(deviations2.map((dev) => dev ** 2));
+		const correlation = sumProductDeviations / Math.sqrt(sumSquaredDeviations1 * sumSquaredDeviations2);
+		return correlation;
+	},
+
+	simpleMovingAverage: (data, windowSize) => {
+		if (windowSize <= 0 || windowSize > data.length) {
+			throw new Error('Invalid window size.');
+		}
+		const movingAverages = [];
+		for (let i = 0; i <= data.length - windowSize; i++) {
+			const window = data.slice(i, i + windowSize);
+			const average = mean(window);
+			movingAverages.push(average);
+		}
+		return movingAverages;
+	},
+
+	exponentialMovingAverage: (data, alpha) => {
+		if (alpha <= 0 || alpha > 1) {
+			throw new Error('Invalid alpha value.');
+		}
+		const ema = [];
+		ema.push(data[0]);
+		for (let i = 1; i < data.length; i++) {
+			const value = alpha * data[i] + (1 - alpha) * ema[i - 1];
+			ema.push(value);
+		}
+		return ema;
+	},
+
+	independentSamplesTTest: (data1, data2) => {
+		const mean1 = mean(data1);
+		const mean2 = mean(data2);
+		const stdDev1 = standardDeviation(data1);
+		const stdDev2 = standardDeviation(data2);
+		const n1 = data1.length;
+		const n2 = data2.length;
+		const pooledVariance = ((n1 - 1) * stdDev1 ** 2 + (n2 - 1) * stdDev2 ** 2) / (n1 + n2 - 2);
+		const tValue = (mean1 - mean2) / Math.sqrt(pooledVariance * (1 / n1 + 1 / n2));
+		return tValue;
+	},
+
+	chiSquareTestIndependence: (observed, expected) => {
+		if (observed.length === 0 || observed[0].length === 0) {
+			throw new Error('Observed array must be a non-empty matrix.');
+		}
+		if (observed.length !== expected.length || observed[0].length !== expected[0].length) {
+			throw new Error('Observed and expected arrays must have the same dimensions.');
+		}
+		const rows = observed.length;
+		const columns = observed[0].length;
+		const degreesOfFreedom = (rows - 1) * (columns - 1);
+		let chiSquare = 0;
+		for (let i = 0; i < rows; i++) {
+			for (let j = 0; j < columns; j++) {
+				const diff = observed[i][j] - expected[i][j];
+				chiSquare += (diff ** 2) / expected[i][j];
+			}
+		}
+		return chiSquare;
+	}
+}
+
+globalThis.Table = class Table {
+	constructor (arr=1, b=1) {
+		if (!Array.isArray(arr)) throw new Error('table can not be constructed from non array')
+		this.rows = arr.length;
+		this.cols = arr.reduce((a,v) => Math.max(a,v.length), 0);
+		this.data = arr.map(r=>r.length === this.cols ? r : Array.from({length: this.cols}).map((ii,i)=>r[i] || 0))
+	}
+	addRow (r,f=0) {
+		this.data.splice(r-1, 0, Array.from({length: this.cols}).map(i=>f));
+		this.rows++
+	}
+	addCol (c,f=0) {
+		this.data = this.data.map(r=>r.splice(c-1, 0, f));
+		this.cols++
+	}
+	remRow (r) {
+		this.data.splice(r-1, q);
+		this.rows--
+	}
+	remCol (c) {
+		this.data = this.data.map(r=>r.splice(c-1, 1));
+		this.cols--
+	}
+	toString () {
+		return 'Table(' + this.rows + 'x' + this.cols + ')'
+	}
+}
+
+export var table = {
+	arrToTable: (arr) => new Table(arr),
+	makeTable: (r=1,c=1,f=0) => new Table(Array.from({length:r}).map(i=>Array.from({length:c}).map(i=>f))),
+	copy: (t) => new Table(this.data.map(r=>r.map(c=>c))),
+	getRow: (t,r) => t.data[r],
+	getCol: (t,r) => Array.from({length: t.rows}).map((ii,i)=>t.data[i][c]),
+	rows: (t) => t.rows,
+	cols: (t) => t.cols,
+	addRow: (t,r,f) => t.addRow(r,f),
+	addCol: (t,c,f) => t.addCol(c,f),
+	removeRow: (t,r) => t.remRow(r),
+	removeCol: (t,c) => t.remCol(c),
+	sliceTable: (t,r1,r2,c1,c2) => new Table(t.data.slice(r1,r2).map(r=>r.slice(c1,c2))),
+	sliceRows: (t,r1,r2) => new Table(t.data.slice(r1,r2)),
+	sliceCols: (t,c1,c2) => new Table(t.data.map(r=>r.slice(c1,c2))),
+	fillTable: (t,f,r1,r2,c1,c2) => t.data.slice(r1,r2).forEach(r=>r.fill(f,c1,c2)),
+	fillRow: (t,f,r1,r2) => t.data.fill(Array.from({length:t.cols}).map(i=>f),r1,r2),
+	fillCol: (t,f,c1,c2) => t.data.forEach(r=>r.fill(f,c1,c2)),
 }
